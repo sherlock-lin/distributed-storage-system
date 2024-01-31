@@ -1,10 +1,13 @@
 package com.sherlock.net;
 
+import com.sherlock.storage.DataStorage;
+import com.sherlock.storage.LocalDataStorageImpl;
 import io.netty.channel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
+import java.nio.MappedByteBuffer;
 import java.util.Date;
 
 /**
@@ -17,18 +20,22 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ServerHandler.class);
 
+    private DataStorage dataStorage = new LocalDataStorageImpl();
+
+
     @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        // 为新连接发送庆祝
-        ctx.write("Welcome to " + InetAddress.getLocalHost().getHostName() + "!\r\n");
-        ctx.write("It is " + new Date() + " now.\r\n");
-        ctx.flush();
+    public void channelActive(ChannelHandlerContext channelHandlerContext) throws Exception {
+        channelHandlerContext.write("Welcome to sherlock home!");
+        channelHandlerContext.write("It is "+ new Date()+"\n");
+        channelHandlerContext.flush();
     }
 
     @Override
     public void channelRead0(ChannelHandlerContext ctx, String request) throws Exception {
         LOG.info("========readdata, request is {}=========", request);
-        // Generate and write a response.
+        //异步通过专门的EventLoop线程池进行处理
+
+        dataStorage.save(request);
         String response;
         boolean close = false;
         if (request.isEmpty()) {

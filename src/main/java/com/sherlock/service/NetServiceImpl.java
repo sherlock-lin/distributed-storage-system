@@ -2,8 +2,11 @@ package com.sherlock.service;
 
 
 import com.sherlock.net.ServerInitializer;
+import com.sherlock.storage.DataStorage;
+import com.sherlock.storage.LocalDataStorageImpl;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -24,20 +27,30 @@ public class NetServiceImpl implements NetService{
 
     private EventLoopGroup bossGroup = null;
     private EventLoopGroup workerGroup = null;
+
     public void start() {
-         bossGroup = new NioEventLoopGroup(1);
-         workerGroup = new NioEventLoopGroup();
+        //bossGroup就是parentGroup，是负责处理TCP/IP连接的
+        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
+        //workerGroup就是childGroup,是负责处理Channel(通道)
+        EventLoopGroup workerGroup = new NioEventLoopGroup(30);
+
         try {
-            ServerBootstrap b = new ServerBootstrap();
-            b.group(bossGroup,workerGroup)
+            ServerBootstrap bootstrap = new ServerBootstrap()
+                    .group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
+                    //初始化服务端可连接队列,指定了队列的大小128
+                    .option(ChannelOption.SO_BACKLOG, 128)
+                    //通过NoDelay禁用Nagle,使消息立即发出去，不用等待到一定的数据量才发出去
+                    .option(ChannelOption.TCP_NODELAY, true)
+                    //保持长连接
+                    .childOption(ChannelOption.SO_KEEPALIVE, true)
                     .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new ServerInitializer());
-            ChannelFuture f = b.bind(8889);
-            f.channel().closeFuture().sync();
-        } catch (Exception e) {
+            ChannelFuture future = bootstrap.bind(8888).sync();
+            future.channel().closeFuture().sync();
+        } catch (Exception e){
 
-        } finally {
+        }finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
         }
