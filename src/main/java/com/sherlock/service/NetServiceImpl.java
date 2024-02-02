@@ -25,6 +25,8 @@ public class NetServiceImpl implements NetService{
 
     private static final Logger LOG = LoggerFactory.getLogger(NetServiceImpl.class);
 
+    public static final String NAME = "net-service";
+
     private EventLoopGroup bossGroup = null;
     private EventLoopGroup workerGroup = null;
 
@@ -59,5 +61,15 @@ public class NetServiceImpl implements NetService{
     public void stop() {
         bossGroup.shutdownGracefully();
         workerGroup.shutdownGracefully();
+    }
+
+    @Override
+    public String getName() {
+        return NAME;
+    }
+
+    @Override
+    public void close() {
+
     }
 }
