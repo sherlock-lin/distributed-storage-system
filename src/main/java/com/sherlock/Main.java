@@ -3,6 +3,7 @@ package com.sherlock;
 import com.google.common.collect.Lists;
 import com.sherlock.common.ComponentStarter;
 import com.sherlock.common.LifecycleComponent;
+import com.sherlock.ha.RegistrationServiceProvider;
 import com.sherlock.service.NetService;
 import com.sherlock.service.NetServiceImpl;
 import com.sherlock.storage.DataStorage;
@@ -18,11 +19,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * describe:
  */
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         Builder builder = new Builder();
 
         NetService netService = new NetServiceImpl();
         DataStorage dataStorage = new LocalDataStorageImpl();
+
+        builder.addComponent(new RegistrationServiceProvider(null));
         builder.addComponent(dataStorage);
         builder.addComponent(netService);
 
